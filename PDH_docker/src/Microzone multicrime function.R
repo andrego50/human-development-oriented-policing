@@ -48,7 +48,7 @@ grouped_crime <- list(homicidio, lesiones, sexual, sexual_nna, extorsion, hurto)
 multicrime <- function(data, departament, municipalities, grouped_crime, probs) {
 
 # Loading polygons of the municipalities
-municipios <- st_read("mun_13_02_2018/Municipios.shp")
+municipios <- st_read("data/mun_13_02_2018/Municipios.shp")
 municipios <- st_as_sf(municipios, crs = 4326)
 unidad <- municipios[municipios$NOM_DEPART == departament,]
 unidad <- unidad[unidad$NOM_MUNICI %in% municipalities,]
@@ -64,7 +64,7 @@ data_intersect <- data %>%
   as_tibble() %>%
   na.omit()
 
-# Kernel density estimation
+# Kernel density estimation funtion
 microterritorio <- NULL
 
 for (i in length(grouped_crime)) {
@@ -76,12 +76,14 @@ for (i in length(grouped_crime)) {
                               data_intersect$DESCRIPCION_CONDUCTA %in% groups &
                                 data_intersect$ZONA == 'RURAL')
   
-  coord_urbana <- multicrimen_ubano[,c('LONGITUD','LATITUD')]
-  coord_rural  <- multicrimen_rural[,c('LONGITUD','LATITUD')]
-  
-  kd_urbana <- kde(coord_urbana, Hpi(coord_urbana, pilot="dscalar"),
+  kd_urbana <- kde(st_coordinates(multicrimen_ubano$geometry), 
+                   Hpi(st_coordinates(multicrimen_ubano$geometry), 
+                       pilot="dscalar"),
                    eval.points = grid_kde)
-  kd_rural <- kde(coord_rural, Hpi(coord_rural, pilot="dscalar"),
+  
+  kd_rural <- kde(st_coordinates(multicrimen_rural$geometry), 
+                  Hpi(st_coordinates(multicrimen_rural$geometry), 
+                      pilot="dscalar"),
                   eval.points = grid_kde)
   
   kde_urbana <- data.frame(x = kd_urbana[["eval.points"]][[1]], 
@@ -109,8 +111,10 @@ for (i in length(grouped_crime)) {
                                urbano = microterritorio_urbano)
 }
 
-
-
+lapply(microterritorio, 
+       function(x) write.table(data.frame(x), 
+                                'microzone_multicrime.csv', 
+                                append = T, sep=',' ))
 }
 
 multicrime(, probs = 0.999)
