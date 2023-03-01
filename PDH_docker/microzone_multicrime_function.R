@@ -111,10 +111,15 @@ for (i in length(grouped_crime)) {
                                urbano = microterritorio_urbano)
 }
 
-lapply(microterritorio, 
-       function(x) write.table(data.frame(x), 
-                                'microzone_multicrime.csv', 
-                                append = T, sep=',' ))
+write.csv(data.frame(longitude = st_coordinates(microterritorio[[1]][["urbano"]][["geometry"]])[,1],
+            latitude = st_coordinates(microterritorio[[1]][["urbano"]][["geometry"]])[,2],
+            density = microterritorio[[1]][["urbano"]][["densidad"]]),
+            'src/results/microzone_multicrime_urban.csv', 
+            append = F, sep=';', dec = ".")
+
+write.table(data.frame(microterritorio[[1]][["rural"]]),
+            'src/results/microzone_multicrime_rural.csv', 
+            append = T, sep=',')
 }
 
 multicrime(, probs = 0.999)
