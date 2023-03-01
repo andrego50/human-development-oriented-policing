@@ -4,7 +4,7 @@
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # Required Packages
-my_packages <- c('ks', 'sf', 'mapview', 'dplyr', 'readr')
+my_packages <- c('ks', 'sf', 'mapview', 'dplyr', 'purrr','readr')
 not_installed <- my_packages[!(my_packages %in% installed.packages()[ , "Package"])]
 if (length(not_installed)) install.packages(not_installed, dependencies = TRUE)
 for (q in 1:length(my_packages)) {
@@ -12,7 +12,7 @@ for (q in 1:length(my_packages)) {
 }
 
 # Import criminal data
-data <- read_csv("src/data/delitos.csv", locale = locale(decimal_mark = ","))
+data <- read_csv("data/delitos.csv", locale = locale(decimal_mark = ","))
 
 # Write the deparment name
 departament <- 'TOLIMA'
@@ -65,9 +65,11 @@ data_intersect <- data %>%
   na.omit()
 
 # Kernel density estimation funtion
-microterritorio <- NULL
+microterritorio <- list()
+microterritorio_rural <- list()
+microterritorio_urbano <- list()
 
-for (i in length(grouped_crime)) {
+for (i in 1:length(grouped_crime)) {
   groups <- grouped_crime[[i]]
   multicrimen_ubano <- subset(data_intersect, 
                               data_intersect$DESCRIPCION_CONDUCTA %in% groups &
@@ -80,7 +82,6 @@ for (i in length(grouped_crime)) {
                    Hpi(st_coordinates(multicrimen_ubano$geometry), 
                        pilot="dscalar"),
                    eval.points = grid_kde)
-  
   kd_rural <- kde(st_coordinates(multicrimen_rural$geometry), 
                   Hpi(st_coordinates(multicrimen_rural$geometry), 
                       pilot="dscalar"),
@@ -96,30 +97,17 @@ for (i in length(grouped_crime)) {
   percentil_urbana <- quantile(kde_urbana$densidad, probs = probs)[[1]]
   percentil_rural <- quantile(kde_rural$densidad, probs = probs)[[1]]
   
-  microterritorio_urbano <- kde_urbana[kde_urbana$densidad >
+  microterritorio_urbano[[i]] <- kde_urbana[kde_urbana$densidad >
                                          percentil_urbana,]
-  microterritorio_rural <- kde_rural[kde_rural$densidad > 
+  microterritorio_rural[[i]] <- kde_rural[kde_rural$densidad > 
                                        percentil_rural,]
-  
-  microterritorio_urbano <- st_as_sf(microterritorio_urbano,
-                                     coords = c('x','y'), 
-                                     crs = 4326)
-  microterritorio_rural <- st_as_sf(microterritorio_rural,
-                                    coords = c('x','y'), 
-                                    crs = 4326)
-  microterritorio[[i]] <- list(rural = microterritorio_rural, 
-                               urbano = microterritorio_urbano)
 }
 
-write.csv(data.frame(longitude = st_coordinates(microterritorio[[1]][["urbano"]][["geometry"]])[,1],
-            latitude = st_coordinates(microterritorio[[1]][["urbano"]][["geometry"]])[,2],
-            density = microterritorio[[1]][["urbano"]][["densidad"]]),
-            'src/results/microzone_multicrime_urban.csv', 
-            append = F, sep=';', dec = ".")
+test <- as.data.frame(do.call(cbind, microterritorio_urbano))
 
-write.table(data.frame(microterritorio[[1]][["rural"]]),
-            'src/results/microzone_multicrime_rural.csv', 
-            append = T, sep=',')
+write.csv(as.data.frame(do.call(cbind, microterritorio_urbano)),
+          'microzone_multicrime_urban.csv', 
+          append = F, sep=';', dec = ".")
 }
 
 multicrime(, probs = 0.999)
