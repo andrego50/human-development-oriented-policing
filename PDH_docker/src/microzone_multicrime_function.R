@@ -12,7 +12,7 @@ for (q in 1:length(my_packages)) {
 }
 
 # Import criminal data
-data <- read_csv("data/delitos.csv", locale = locale(decimal_mark = ","))
+data <- read_csv("src/data/delitos.csv", locale = locale(decimal_mark = ","))
 
 # Write the deparment name
 departament <- 'TOLIMA'
