@@ -3,7 +3,7 @@
 multicrime <- function(data, departament, municipalities, grouped_crime, probs) {
   
   # Loading polygons of the municipalities
-  municipios <- st_read("src/data/mun_13_02_2018/Municipios.shp")
+  municipios <- st_read("data/mun_13_02_2018/Municipios.shp")
   municipios <- st_as_sf(municipios, crs = 4326)
   unidad <- municipios[municipios$NOM_DEPART == departament,]
   unidad <- unidad[unidad$NOM_MUNICI %in% municipalities,]
