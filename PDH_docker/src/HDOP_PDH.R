@@ -10,10 +10,10 @@ for (q in 1:length(my_packages)) {
 }
 
 # Microzone multicrime
-source('src/microzone_multicrime_function.R')
+source('microzone_multicrime_function.R')
 
 # Import criminal data
-data <- read_csv("src/data/delitos.csv", locale = locale(decimal_mark = ","))
+data <- read_csv("data/delitos.csv", locale = locale(decimal_mark = ","))
 
 # Write the deparment name
 departament <- 'TOLIMA'
@@ -50,3 +50,4 @@ multicrime(data = data,
            municipalities = municipalities, 
            grouped_crime = grouped_crime, 
            probs = 0.999)
+
